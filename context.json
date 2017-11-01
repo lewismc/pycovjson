@@ -1,0 +1,8 @@
+{
+  "@context": {
+  	"dataType": "http://schema.org/DataType",
+    "description": "http://schema.org/description", 
+    "domainType": "http://schema.org/additionalType",
+    "type": "http://schema.org/additionalType"
+  }
+}

@@ -1,5 +1,9 @@
 from pycovjson.model import Coverage, Domain, Parameter, Range, Reference, SpatialReferenceSystem2d, SpatialReferenceSystem3d, TemporalReferenceSystem, TileSet
 from pycovjson.read_netcdf import NetCDFReader as Reader
+import json
+from pyld import jsonld
+from pymongo import MongoClient
+from pymongo.son_manipulator import SONManipulator
 import time
 import json
 import uuid
@@ -8,7 +12,7 @@ import uuid
 class Writer(object):
     """Writer class"""
 
-    def __init__(self, output_name: object, dataset_path: object, vars_to_write: object, tiled=False, tile_shape=[]) -> object:
+    def __init__(self, output_name: object, dataset_path: object, vars_to_write: object, endpoint_url: object, tiled=False, tile_shape=[], covjson_ld=False) -> object:
         """
         Writer class constructor
 
@@ -17,6 +21,8 @@ class Writer(object):
         :parameter vars_to_write: List of variables to write
         :parameter tiled: Boolean value (default False)
         :parameter tile_shape: List containing shape of tiles
+        :parameter endpoint_url: MongoDB endpoint for CovJSON persistence
+        :parameter covjson_ld: Optional Boolean flag for generating CovJSON-LD
         """
         self.output_name = output_name
         self.tile_shape = tile_shape
@@ -41,6 +47,11 @@ class Writer(object):
             self.ref_list.append(SpatialReferenceSystem2d())
         elif 't' not in self.axis_list and 'z' not in self.axis_list:
             self.ref_list.append(SpatialReferenceSystem2d())
+        if endpoint_url is not None:
+            self.endpoint_url = endpoint_url
+        else:
+            self.endpoint_url = None
+        self.covjson_ld = covjson_ld
 
     def write(self):
         """
@@ -159,7 +170,16 @@ class Writer(object):
         with open(path, 'w') as fp:
             print("Converting....")
             start = time.clock()
-            jsonstr = json.dumps(obj, fp, cls=CustomEncoder, **kw)
+            if covjson_ld:
+                context = {
+                    "dataType": "http://schema.org/DataType",
+                    "description": "http://schema.org/description",
+                    "domainType": "http://schema.org/additionalType",
+                    "type": "http://schema.org/additionalType"
+                }
+                jsonstr = jsonld.compact(json.dumps(obj, fp, cls=CustomEncoder, **kw), context)
+            else:
+                jsonstr = json.dumps(obj, fp, cls=CustomEncoder, **kw)
             fp.write(jsonstr)
             stop = time.clock()
             print("Completed in: '%s' seconds." % (stop - start))

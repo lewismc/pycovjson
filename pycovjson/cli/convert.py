@@ -35,6 +35,11 @@ def main():
     parser.add_argument('-v', dest='variable',
                         help='Variable to populate coverage with', required=True)
     parser.add_argument('-n', '--interactive', action='store_true', help='Enter interactive mode')
+    parser.add_argument('-u', '--endpoint_url', dest='endpoint_url', nargs=1, 
+                        help='MongoDB endpoint for CovJSON persistence')
+    parser.add_argument('-j', '--json_ld', dest='json_ld', action='store_true', 
+                        help='Optional Boolean flag for generating CovJSON-LD')
+
     args = parser.parse_args()
     inputfile = args.inputfile
     outputfile = args.outputfile
@@ -42,6 +47,8 @@ def main():
     tiled = args.tiled
     tile_shape = args.shape
     interactive = args.interactive
+    endpoint_url = args.endpoint_url
+    covjson_ld = args.json_ld
 
     if interactive:
         axis = input('Which Axis?', Reader.get_axis(variable))
@@ -60,7 +67,7 @@ def main():
         outputfile = outputfile.default
 
     Writer(outputfile, inputfile, [variable],
-           tiled=tiled, tile_shape=tile_shape).write()
+           tiled=tiled, tile_shape=tile_shape, endpoint_url=endpoint_url, covjson_ld).write()
 
 if __name__ == '__main__':
     main()
